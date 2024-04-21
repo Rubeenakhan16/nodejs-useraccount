@@ -3,7 +3,7 @@ deployment:
   replicaCount: 1
 
 image:
-  repository: artisantek/useraccount
+  repository: rubinafayeen58/two-tier
   tag: version1
   
 service:
