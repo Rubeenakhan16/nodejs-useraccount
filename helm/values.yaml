@@ -4,7 +4,7 @@ deployment:
 
 image:
   repository: rubinafayeen58/two-tier
-  tag: version1
+  tag: latest
   
 service:
   containerPort: 3080
