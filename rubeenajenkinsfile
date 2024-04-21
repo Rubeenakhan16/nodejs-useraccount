@@ -1,0 +1,71 @@
+pipeline {
+    agent none
+    stages {
+        stage('gitcheckout') {
+            agent {
+                label 'Built-in-Node'
+            }
+            steps {
+                script {
+                    git branch: 'main', url: 'https://github.com/Rubeenakhan16/nodejs-useraccount.git'
+                }
+            }
+        }
+         stage('SonarQube Analysis') {
+            agent {
+                label 'Built-in-Node'
+            }
+            environment {
+                SCANNER_HOME = tool 'sonar-scanner'
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+                        dir('my-app/src') {
+                            sh """
+                                $SCANNER_HOME/bin/sonar-scanner \
+                                -Dsonar.projectKey=demo \
+                                -Dsonar.host.url=http://52.66.203.196:9000 \
+                                -Dsonar.login=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        stage('docker build') {
+            agent {
+                label 'Built-in-Node'
+            }
+            steps {
+                script {
+                    sh 'docker build -t rubinafayeen58/two-tier .'
+                }
+            }
+        }
+        stage('docker push') {
+            agent {
+                label 'Built-in-Node'
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        sh 'docker push rubinafayeen58/two-tier '
+                    }
+                }
+            }
+        }
+        stage('helm') {
+            agent {
+                label 'newone'
+            }
+            steps {
+                script {
+                    sh 'helm uninstall helm'
+                    sh 'helm install helm ./helm'
+                }
+            }
+        }
+    }
+}
